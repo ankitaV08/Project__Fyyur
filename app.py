@@ -108,6 +108,7 @@ def venues():
   # }]
   return render_template('pages/venues.html', areas=data);
 
+
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
@@ -294,6 +295,7 @@ def show_venue(venue_id):
 #  Create Venue
 #  ----------------------------------------------------------------
 
+
 @app.route('/venues/create', methods=['GET'])
 def create_venue_form():
   form = VenueForm()
@@ -305,21 +307,21 @@ def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
   form = VenueForm(request.form)
-  name = form.name.data.strip()
+  name = request.form['name']
   print(name)
-  city = form.city.data.strip()
+  city = request.form['city']
   print(city)
-  genres = form.genres.data 
+  genres = request.form.getlist('genres', type=str)
   print(genres)
-  state = form.state.data
-  phone = form.phone.data   
-  address = form.address.data.strip() 
-  website = form.website_link.data.strip()       
-  image_link = form.image_link.data.strip()
+  state = request.form['state']
+  phone = request.form['phone']   
+  address = request.form['address'] 
+  website = request.form['website_link']      
+  image_link = request.form['image_link']
   seeking_talent = "seeking_talent" in request.form
   print(seeking_talent)
-  seeking_description = form.seeking_description.data.strip()
-  facebook_link = form.facebook_link.data.strip()
+  seeking_description = request.form['seeking_description']
+  facebook_link = request.form['facebook_link']
   try:
     print(form.validate())
 
@@ -345,6 +347,7 @@ def create_venue_submission():
   finally:
     db.session.close()
     return render_template('pages/home.html')
+
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
@@ -438,6 +441,7 @@ def search_artists():
   # }
   return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
+
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
   # shows the artist page with the given artist_id
@@ -446,8 +450,8 @@ def show_artist(artist_id):
   data = {}
   # fetching particular artist data based on artist_id
   artist_details = Artist.query.get(artist_id)  
-  past_shows = []
   upcoming_shows = []
+  past_shows = []
   present_time = datetime.now()
 
   # logic to calculate past shows
@@ -570,14 +574,19 @@ def show_artist(artist_id):
   print('DATA : ', data)
   return render_template('pages/show_artist.html', artist=data)
 
+
 #  Update
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
   form = ArtistForm()
   artist = Artist.query.get(artist_id)
-  print(artist)
-  populated_form = ArtistForm(name=artist.name, city=artist.city, state=artist.state, phone=artist.phone, genres=artist.genres, facebook_link=artist.facebook_link, image_link=artist.image_link, website_link=artist.website, seeking_venue=artist.seeking_venue, seeking_description=artist.seeking_description)
+  if(artist is not None):
+    print(artist)
+    populated_form = ArtistForm(name=artist.name, city=artist.city, state=artist.state, phone=artist.phone, genres=artist.genres, facebook_link=artist.facebook_link, image_link=artist.image_link, website_link=artist.website, seeking_venue=artist.seeking_venue, seeking_description=artist.seeking_description)
+  else:
+    flash('Artist id {artist_id} does not exist!')
+    populated_form = ArtistForm()
   # artist={
   #   "id": 4,
   #   "name": "Guns N Petals",
@@ -593,6 +602,7 @@ def edit_artist(artist_id):
   # }
   # TODO: populate form with fields from artist with ID <artist_id>
   return render_template('forms/edit_artist.html', form=populated_form, artist=artist)
+
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
@@ -624,12 +634,13 @@ def edit_artist_submission(artist_id):
       db.session.close()
       return redirect(url_for('show_artist', artist_id=artist_id))
 
+
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
   form = VenueForm()
-  venue = Venue.query.get(venue_id)
-  print(venue)
-  populated_form = VenueForm(name=venue.name, genres=venue.genres, address=venue.address, city=venue.city, state=venue.state, phone=venue.phone, website_link=venue.website, facebook_link=venue.facebook_link, seeking_talent=venue.seeking_talent, seeking_description=venue.seeking_description, image_link=venue.image_link)
+  venue_details = Venue.query.get(venue_id)
+  print(venue_details)
+  populated_form = VenueForm(name=venue_details.name, genres=venue_details.genres, address=venue_details.address, city=venue_details.city, state=venue_details.state, phone=venue_details.phone, website_link=venue_details.website, facebook_link=venue_details.facebook_link, seeking_talent=venue_details.seeking_talent, seeking_description=venue_details.seeking_description, image_link=venue_details.image_link)
   # venue={
   #   "id": 1,
   #   "name": "The Musical Hop",
@@ -645,7 +656,7 @@ def edit_venue(venue_id):
   #   "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60"
   # }
   # TODO: populate form with values from venue with ID <venue_id>
-  return render_template('forms/edit_venue.html', form=populated_form, venue=venue)
+  return render_template('forms/edit_venue.html', form=populated_form, venue=venue_details)
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
@@ -667,12 +678,13 @@ def edit_venue_submission(venue_id):
       updated_venue.image_link = request.form['image_link']
       updated_venue.seeking_talent = 'seeking_talent' in request.form
       updated_venue.seeking_description = request.form['seeking_description']
+      print(updated_venue)
       db.session.commit()
       flash(f"Venue with id {venue_id} updated successfully!")
     else :
       flash(form.errors)
   except:
-    flash(f"An error occurred. Venue with id {venue_id} could not be updated.", category="error")
+    flash(f"An error occurred. Venue with id {venue_id} could not be updated.")
     db.session.rollback()
   finally:
     db.session.close()
@@ -685,6 +697,7 @@ def edit_venue_submission(venue_id):
 def create_artist_form():
   form = ArtistForm()
   return render_template('forms/new_artist.html', form=form)
+
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
@@ -729,7 +742,9 @@ def shows():
     details['artist_name'] = Artist.query.filter(Artist.id == shows.artist_id).first().name
     details['artist_image_link'] = Artist.query.filter(Artist.id == shows.artist_id).first().image_link
     details['start_time'] = str(shows.start_time)
+    print(details)
     data.append(details)
+    print(data)
   # data=[{
   #   "venue_id": 1,
   #   "venue_name": "The Musical Hop",
@@ -775,18 +790,25 @@ def create_shows():
   form = ShowForm()
   return render_template('forms/new_show.html', form=form)
 
+
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
   # called to create new shows in the db, upon submitting new show listing form
   # TODO: insert form data as a new Show record in the db, instead
   form = ShowForm(request.form)
   try:
+    print(form.validate())
     if(form.validate()):
-      new_show = Show(artist_id=request.form['artist_id'],venue_id=request.form['venue_id'], start_time=request.form['start_time'])
-      db.session.add(show)
+      artist_id=request.form['artist_id']
+      venue_id=request.form['venue_id']
+      start_time=datetime.fromisoformat(str(request.form['start_time']))
+
+      new_show = Show(artist_id=artist_id,venue_id=venue_id, start_time=start_time)
+      print(new_show)
+      db.session.add(new_show)
       db.session.commit()
       # on successful db insert, flash success
-      flash('Show was successfully listed!')
+      flash('Show was successfully Added!')
     else:
       flash(form.errors)
   except:
