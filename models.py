@@ -11,7 +11,7 @@ db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)
 
-app.app_context().push()
+# app.app_context().push()
 
 #----------------------------------------------------------------------------#
 # Models.

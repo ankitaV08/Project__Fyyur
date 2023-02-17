@@ -623,6 +623,7 @@ def edit_artist_submission(artist_id):
       updated_artist.website = request.form['website_link']
       updated_artist.seeking_venue = 'seeking_venue' in request.form
       updated_artist.seeking_description = request.form['seeking_description']
+      print(updated_artist)
       db.session.commit()
       flash(f"Artist with id {artist_id} updated successfully!")
     else :
@@ -706,15 +707,33 @@ def create_artist_submission():
   # TODO: modify data to be the data object returned from db insertion
 
   form = ArtistForm(request.form)
+  name = request.form['name']
+  print(name)
+  genres = request.form.getlist('genres', type=str)
+  print(genres)
+  state = request.form['state']
+  city = request.form['city']
+  phone = request.form['phone']
+  facebook_link = request.form['facebook_link']
+  website = request.form['website_link']
+  seeking_venue = 'seeking_venue' in request.form
+  print(seeking_venue)
+  seeking_description = request.form['seeking_description']
+  image_link = request.form['image_link']
   try:
+    print(form.validate())
+
     if form.validate():
-      new_artist = Artist(name=request.form['name'],genres=request.form.getlist('genres', type=str),state=request.form['state'], city=request.form['city'], phone=request.form['phone'], facebook_link=request.form['facebook_link'], website=request.form['website_link'], seeking_venue='seeking_venue' in request.form, seeking_description=request.form['seeking_description'], image_link=request.form['image_link'])
+      print("inside if block")
+      new_artist = Artist(name=name,genres=genres,state=state, city=city, phone=phone, facebook_link=facebook_link, website=website, seeking_venue=seeking_venue, seeking_description=seeking_description, image_link=image_link)
+      print(new_artist)
       db.session.add(new_artist)
+      print('session.add completed')
       db.session.commit()
       # on successful db insert, flash success
-      flash('Artist ' + request.form['name'] + ' was successfully listed!')
+      flash(f"Artist '{request.form['name']}' was successfully listed!")
     else:
-        flash(form.errors)
+      flash(form.errors)
   except:
     # TODO: on unsuccessful db insert, flash an error instead.
     # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
